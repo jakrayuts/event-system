@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Dashboard - จัดการผู้ใช้</title>
+  <title>Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     ::-webkit-scrollbar {
@@ -16,248 +16,208 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-  <!-- ✅ Top Navigation Menu -->
-  <nav class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-      <div class="text-xl font-bold">Admin Panel</div>
-      <ul class="flex gap-6 font-medium">
-        <li><a href="index.html" class="nav-link hover:underline hover:text-yellow-300 transition">📅 ปฏิทิน</a></li>
-        <li><a href="addevent.html" class="nav-link hover:underline hover:text-yellow-300 transition">📋 รายการ Event</a></li>
-        <li><a href="admin.html" class="nav-link hover:underline hover:text-yellow-300 transition">👥 จัดการผู้ใช้</a></li>
-      </ul>
-      <button id="logoutBtn" class="ml-4 text-sm hover:underline text-red-200 hover:text-white">ออกจากระบบ</button>
+  <!-- Top Menu -->
+  <nav class="bg-white shadow sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="text-xl font-bold text-blue-600">Admin Dashboard</div>
+      <div class="flex gap-4">
+        <button class="tab-btn text-gray-600 hover:text-blue-600 transition" data-target="calendar">🗕️ ปฏิทิน</button>
+        <button class="tab-btn text-gray-600 hover:text-blue-600 transition" data-target="event">📋 รายการ Event</button>
+        <button class="tab-btn text-blue-700 font-semibold underline" data-target="user">👥 จัดการผู้ใช้</button>
+        <button id="logoutBtn" class="text-red-500 hover:underline">ออกจากระบบ</button>
+      </div>
     </div>
   </nav>
 
-  <!-- ✅ Main Content -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 py-6">
-    <section class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-xl font-semibold mb-4">จัดการผู้ใช้</h2>
+  <!-- Content Sections -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-      <!-- 🔍 Search -->
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="ค้นหาชื่อผู้ใช้ หรือ ชื่อเต็ม..."
-        class="w-full px-4 py-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-
-      <!-- 👥 User Table -->
-      <div class="overflow-x-auto max-h-[450px]">
-        <table class="min-w-full table-auto border-collapse border border-gray-200">
-          <thead class="bg-blue-100 sticky top-0">
-            <tr>
-              <th class="border border-gray-300 px-4 py-2 text-left">Username</th>
-              <th class="border border-gray-300 px-4 py-2 text-left">ชื่อเต็ม</th>
-              <th class="border border-gray-300 px-4 py-2 text-left">Role</th>
-              <th class="border border-gray-300 px-4 py-2 text-left">วันที่สร้าง</th>
-              <th class="border border-gray-300 px-4 py-2 text-center">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody" class="text-gray-700 max-h-[400px] overflow-y-auto">
-            <!-- รายชื่อผู้ใช้จะถูกเติมด้วย JS -->
-          </tbody>
-        </table>
+    <!-- Calendar -->
+    <section id="section-calendar" class="hidden">
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-xl font-semibold mb-4">🗕️ ปฏิทินกิจกรรม</h2>
+        <p>คุณสามารถใส่ calendar.js หรือ FullCalendar ตรงนี้ได้</p>
       </div>
+    </section>
 
-      <!-- 📝 Add/Edit User Form -->
-      <div class="mt-8 border-t pt-6">
-        <h3 id="formTitle" class="text-lg font-semibold mb-4">เพิ่มผู้ใช้ใหม่</h3>
-        <form id="userForm" class="space-y-4 max-w-md">
+    <!-- Event List -->
+    <section id="section-event" class="hidden">
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-xl font-semibold mb-4">📋 รายการ Event</h2>
+        <p>ใส่ตาราง event หรือ form สร้างกิจกรรมที่นี่</p>
+      </div>
+    </section>
+
+    <!-- User Management -->
+    <section id="section-user">
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-xl font-semibold mb-4">👥 จัดการผู้ใช้</h2>
+
+        <input id="searchInput" type="text" placeholder="ค้นหา..."
+          class="w-full px-4 py-2 border rounded-lg mb-4" />
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full table-auto border">
+            <thead class="bg-blue-100">
+              <tr>
+                <th class="border px-4 py-2">Username</th>
+                <th class="border px-4 py-2">ชื่อเต็ม</th>
+                <th class="border px-4 py-2">Role</th>
+                <th class="border px-4 py-2">สร้างเมื่อ</th>
+                <th class="border px-4 py-2">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+
+        <form id="userForm" class="space-y-4 mt-6">
           <input type="hidden" id="userId" />
-
-          <input
-            type="text"
-            id="username"
-            placeholder="ชื่อผู้ใช้ (username)"
-            required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            id="fullName"
-            placeholder="ชื่อเต็ม"
-            required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="password"
-            id="password"
-            placeholder="รหัสผ่าน"
-            required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <select
-            id="role"
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          >
+          <input type="text" id="username" placeholder="Username" required class="w-full px-4 py-2 border rounded-lg" />
+          <input type="text" id="fullName" placeholder="ชื่อเต็ม" required class="w-full px-4 py-2 border rounded-lg" />
+          <input type="password" id="password" placeholder="รหัสผ่าน" required class="w-full px-4 py-2 border rounded-lg" />
+          <select id="role" class="w-full px-4 py-2 border rounded-lg">
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
-
           <div class="flex gap-4">
-            <button
-              type="submit"
-              id="saveBtn"
-              class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-            >บันทึก</button>
-            <button
-              type="button"
-              id="cancelBtn"
-              class="bg-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-400 transition"
-            >ยกเลิก</button>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg">บันทึก</button>
+            <button type="button" id="cancelBtn" class="bg-gray-300 px-4 py-2 rounded-lg">ยกเลิก</button>
           </div>
         </form>
       </div>
     </section>
   </main>
 
-  <!-- ✅ Script -->
+  <!-- Script -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+    const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
 
-    const supabase = createClient(
-      'https://yyxovuybwuqvgtikujyi.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ'
-    )
-
-    // 🔐 ตรวจสอบ session
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     if (!user.id || user.role !== 'admin') {
       alert('เฉพาะแอดมินเท่านั้น')
       location.href = 'login.html'
     }
 
-    // 🌐 Navigation Active Highlight
-    const current = location.pathname.split('/').pop()
-    document.querySelectorAll('.nav-link').forEach(link => {
-      if (link.getAttribute('href') === current) {
-        link.classList.add('underline', 'font-bold', 'text-yellow-300')
-      } else {
-        link.classList.remove('underline', 'font-bold', 'text-yellow-300')
-      }
+    // Navigation tab
+    const tabButtons = document.querySelectorAll('.tab-btn')
+    const sections = {
+      calendar: document.getElementById('section-calendar'),
+      event: document.getElementById('section-event'),
+      user: document.getElementById('section-user')
+    }
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target
+        for (let key in sections) {
+          sections[key].classList.toggle('hidden', key !== target)
+        }
+        tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold', 'underline'))
+        btn.classList.add('text-blue-700', 'font-semibold', 'underline')
+      })
     })
 
-    const userTableBody = document.getElementById('userTableBody')
-    const searchInput = document.getElementById('searchInput')
+    // Logout
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.removeItem('user')
+      location.href = 'login.html'
+    }
+
+    // User management
     const userForm = document.getElementById('userForm')
-    const formTitle = document.getElementById('formTitle')
     const userIdInput = document.getElementById('userId')
     const usernameInput = document.getElementById('username')
     const fullNameInput = document.getElementById('fullName')
     const passwordInput = document.getElementById('password')
     const roleSelect = document.getElementById('role')
     const cancelBtn = document.getElementById('cancelBtn')
+    const userTableBody = document.getElementById('userTableBody')
+    const searchInput = document.getElementById('searchInput')
 
     let allUsers = []
     let editMode = false
 
-    // 🔄 โหลดข้อมูลผู้ใช้
     async function loadUsers() {
       const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
-      if (error) {
-        alert('โหลดข้อมูลล้มเหลว: ' + error.message)
-        return
-      }
+      if (error) return alert('โหลดล้มเหลว')
       allUsers = data
       renderUserTable(data)
     }
 
-    // 🧾 แสดงตาราง
     function renderUserTable(users) {
       if (!users.length) {
-        userTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">ไม่พบข้อมูลผู้ใช้</td></tr>`
+        userTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">ไม่มีข้อมูล</td></tr>'
         return
       }
       userTableBody.innerHTML = users.map(u => `
-        <tr class="hover:bg-gray-50">
-          <td class="border border-gray-300 px-4 py-2">${u.username}</td>
-          <td class="border border-gray-300 px-4 py-2">${u.full_name || ''}</td>
-          <td class="border border-gray-300 px-4 py-2 capitalize">${u.role}</td>
-          <td class="border border-gray-300 px-4 py-2">${new Date(u.created_at).toLocaleString()}</td>
-          <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
-            <button data-id="${u.id}" class="editBtn text-blue-600 hover:underline">แก้ไข</button>
-            <button data-id="${u.id}" class="deleteBtn text-red-600 hover:underline">ลบ</button>
+        <tr>
+          <td class="border px-4 py-2">${u.username}</td>
+          <td class="border px-4 py-2">${u.full_name || ''}</td>
+          <td class="border px-4 py-2">${u.role}</td>
+          <td class="border px-4 py-2">${new Date(u.created_at).toLocaleString()}</td>
+          <td class="border px-4 py-2 space-x-2 text-center">
+            <button class="editBtn text-blue-600" data-id="${u.id}">แก้ไข</button>
+            <button class="deleteBtn text-red-600" data-id="${u.id}">ลบ</button>
           </td>
-        </tr>
-      `).join('')
+        </tr>`).join('')
       attachTableEvents()
     }
 
-    // ✏️ แก้ไข/ลบ
     function attachTableEvents() {
       document.querySelectorAll('.editBtn').forEach(btn => {
         btn.onclick = () => {
           const id = btn.dataset.id
-          const user = allUsers.find(u => u.id === id)
-          if (!user) return alert('ไม่พบข้อมูล')
+          const u = allUsers.find(x => x.id === id)
+          if (!u) return alert('ไม่พบ')
           editMode = true
-          formTitle.textContent = 'แก้ไขผู้ใช้'
-          userIdInput.value = user.id
-          usernameInput.value = user.username
-          fullNameInput.value = user.full_name || ''
-          passwordInput.value = user.password || ''
-          roleSelect.value = user.role
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          userIdInput.value = u.id
+          usernameInput.value = u.username
+          fullNameInput.value = u.full_name
+          passwordInput.value = u.password
+          roleSelect.value = u.role
         }
       })
       document.querySelectorAll('.deleteBtn').forEach(btn => {
         btn.onclick = async () => {
-          if (!confirm('ลบผู้ใช้นี้จริงหรือไม่?')) return
           const id = btn.dataset.id
-          const { error } = await supabase.from('users').delete().eq('id', id)
-          if (error) return alert('ลบไม่สำเร็จ: ' + error.message)
-          alert('ลบสำเร็จ')
+          if (!confirm('ลบ?')) return
+          await supabase.from('users').delete().eq('id', id)
           loadUsers()
         }
       })
     }
 
-    // 🔍 ค้นหา
     searchInput.addEventListener('input', e => {
       const q = e.target.value.toLowerCase()
-      const filtered = allUsers.filter(
-        u => u.username.toLowerCase().includes(q) || (u.full_name && u.full_name.toLowerCase().includes(q))
+      const filtered = allUsers.filter(u =>
+        u.username.toLowerCase().includes(q) ||
+        (u.full_name && u.full_name.toLowerCase().includes(q))
       )
       renderUserTable(filtered)
     })
 
-    // 💾 บันทึก
-    userForm.addEventListener('submit', async e => {
+    userForm.onsubmit = async e => {
       e.preventDefault()
-      const id = userIdInput.value
-      const username = usernameInput.value.trim()
-      const full_name = fullNameInput.value.trim()
-      const password = passwordInput.value.trim()
-      const role = roleSelect.value
-
-      if (!username || !password) return alert('กรุณากรอกข้อมูลให้ครบ')
-
-      const payload = { username, full_name, password, role }
-
-      const { error } = editMode
-        ? await supabase.from('users').update(payload).eq('id', id)
-        : await supabase.from('users').insert([payload])
-
-      if (error) return alert(error.message)
-      alert(editMode ? 'อัปเดตสำเร็จ' : 'เพิ่มสำเร็จ')
-      editMode = false
+      const payload = {
+        username: usernameInput.value,
+        full_name: fullNameInput.value,
+        password: passwordInput.value,
+        role: roleSelect.value
+      }
+      if (editMode) {
+        await supabase.from('users').update(payload).eq('id', userIdInput.value)
+        editMode = false
+      } else {
+        await supabase.from('users').insert([payload])
+      }
       userForm.reset()
-      formTitle.textContent = 'เพิ่มผู้ใช้ใหม่'
       loadUsers()
-    })
+    }
 
     cancelBtn.onclick = () => {
       editMode = false
       userForm.reset()
-      formTitle.textContent = 'เพิ่มผู้ใช้ใหม่'
-    }
-
-    // 🚪 Logout
-    document.getElementById('logoutBtn').onclick = () => {
-      localStorage.removeItem('user')
-      location.href = 'login.html'
     }
 
     loadUsers()
