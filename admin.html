@@ -5,9 +5,7 @@
   <title>Admin Dashboard - จัดการผู้ใช้</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* custom scrollbar เล็กน้อย */
     ::-webkit-scrollbar {
-      height: 8px;
       width: 8px;
     }
     ::-webkit-scrollbar-thumb {
@@ -18,18 +16,25 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-blue-600">Admin Dashboard</h1>
-    <button id="logoutBtn" class="text-red-600 hover:underline">ออกจากระบบ</button>
-  </header>
+  <!-- ✅ Top Navigation Menu -->
+  <nav class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="text-xl font-bold">Admin Panel</div>
+      <ul class="flex gap-6 font-medium">
+        <li><a href="index.html" class="nav-link hover:underline hover:text-yellow-300 transition">📅 ปฏิทิน</a></li>
+        <li><a href="addevent.html" class="nav-link hover:underline hover:text-yellow-300 transition">📋 รายการ Event</a></li>
+        <li><a href="admin.html" class="nav-link hover:underline hover:text-yellow-300 transition">👥 จัดการผู้ใช้</a></li>
+      </ul>
+      <button id="logoutBtn" class="ml-4 text-sm hover:underline text-red-200 hover:text-white">ออกจากระบบ</button>
+    </div>
+  </nav>
 
-  <!-- Main content -->
+  <!-- ✅ Main Content -->
   <main class="flex-grow max-w-7xl mx-auto px-4 py-6">
     <section class="bg-white rounded-xl shadow p-6">
       <h2 class="text-xl font-semibold mb-4">จัดการผู้ใช้</h2>
 
-      <!-- Search -->
+      <!-- 🔍 Search -->
       <input
         type="text"
         id="searchInput"
@@ -37,7 +42,7 @@
         class="w-full px-4 py-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
 
-      <!-- User Table -->
+      <!-- 👥 User Table -->
       <div class="overflow-x-auto max-h-[450px]">
         <table class="min-w-full table-auto border-collapse border border-gray-200">
           <thead class="bg-blue-100 sticky top-0">
@@ -50,12 +55,12 @@
             </tr>
           </thead>
           <tbody id="userTableBody" class="text-gray-700 max-h-[400px] overflow-y-auto">
-            <!-- users data มาเติมที่นี่ -->
+            <!-- รายชื่อผู้ใช้จะถูกเติมด้วย JS -->
           </tbody>
         </table>
       </div>
 
-      <!-- Add/Edit User Form -->
+      <!-- 📝 Add/Edit User Form -->
       <div class="mt-8 border-t pt-6">
         <h3 id="formTitle" class="text-lg font-semibold mb-4">เพิ่มผู้ใช้ใหม่</h3>
         <form id="userForm" class="space-y-4 max-w-md">
@@ -96,22 +101,19 @@
               type="submit"
               id="saveBtn"
               class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
-            >
-              บันทึก
-            </button>
+            >บันทึก</button>
             <button
               type="button"
               id="cancelBtn"
               class="bg-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-400 transition"
-            >
-              ยกเลิก
-            </button>
+            >ยกเลิก</button>
           </div>
         </form>
       </div>
     </section>
   </main>
 
+  <!-- ✅ Script -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
@@ -120,12 +122,22 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ'
     )
 
-    // ตรวจสอบ login และ role (ต้องแก้ให้ตรงกับระบบคุณ)
+    // 🔐 ตรวจสอบ session
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     if (!user.id || user.role !== 'admin') {
       alert('เฉพาะแอดมินเท่านั้น')
       location.href = 'login.html'
     }
+
+    // 🌐 Navigation Active Highlight
+    const current = location.pathname.split('/').pop()
+    document.querySelectorAll('.nav-link').forEach(link => {
+      if (link.getAttribute('href') === current) {
+        link.classList.add('underline', 'font-bold', 'text-yellow-300')
+      } else {
+        link.classList.remove('underline', 'font-bold', 'text-yellow-300')
+      }
+    })
 
     const userTableBody = document.getElementById('userTableBody')
     const searchInput = document.getElementById('searchInput')
@@ -136,24 +148,23 @@
     const fullNameInput = document.getElementById('fullName')
     const passwordInput = document.getElementById('password')
     const roleSelect = document.getElementById('role')
-    const saveBtn = document.getElementById('saveBtn')
     const cancelBtn = document.getElementById('cancelBtn')
 
     let allUsers = []
     let editMode = false
 
-    // โหลดผู้ใช้ทั้งหมด
+    // 🔄 โหลดข้อมูลผู้ใช้
     async function loadUsers() {
       const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
       if (error) {
-        alert('โหลดข้อมูลผู้ใช้ล้มเหลว: ' + error.message)
+        alert('โหลดข้อมูลล้มเหลว: ' + error.message)
         return
       }
       allUsers = data
       renderUserTable(data)
     }
 
-    // แสดงตารางผู้ใช้
+    // 🧾 แสดงตาราง
     function renderUserTable(users) {
       if (!users.length) {
         userTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">ไม่พบข้อมูลผู้ใช้</td></tr>`
@@ -174,26 +185,26 @@
       attachTableEvents()
     }
 
-    // ผูก event ปุ่มแก้ไข/ลบ ในตาราง
+    // ✏️ แก้ไข/ลบ
     function attachTableEvents() {
       document.querySelectorAll('.editBtn').forEach(btn => {
         btn.onclick = () => {
           const id = btn.dataset.id
           const user = allUsers.find(u => u.id === id)
-          if (!user) return alert('ไม่พบข้อมูลผู้ใช้')
+          if (!user) return alert('ไม่พบข้อมูล')
           editMode = true
           formTitle.textContent = 'แก้ไขผู้ใช้'
           userIdInput.value = user.id
           usernameInput.value = user.username
           fullNameInput.value = user.full_name || ''
-          passwordInput.value = user.password || ''  // ถ้าไม่ใช้ hash
+          passwordInput.value = user.password || ''
           roleSelect.value = user.role
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }
       })
       document.querySelectorAll('.deleteBtn').forEach(btn => {
         btn.onclick = async () => {
-          if (!confirm('ต้องการลบผู้ใช้นี้จริงหรือไม่?')) return
+          if (!confirm('ลบผู้ใช้นี้จริงหรือไม่?')) return
           const id = btn.dataset.id
           const { error } = await supabase.from('users').delete().eq('id', id)
           if (error) return alert('ลบไม่สำเร็จ: ' + error.message)
@@ -203,7 +214,7 @@
       })
     }
 
-    // ฟิลเตอร์ค้นหา
+    // 🔍 ค้นหา
     searchInput.addEventListener('input', e => {
       const q = e.target.value.toLowerCase()
       const filtered = allUsers.filter(
@@ -212,7 +223,7 @@
       renderUserTable(filtered)
     })
 
-    // ฟอร์มบันทึกเพิ่ม/แก้ไขผู้ใช้
+    // 💾 บันทึก
     userForm.addEventListener('submit', async e => {
       e.preventDefault()
       const id = userIdInput.value
@@ -221,45 +232,33 @@
       const password = passwordInput.value.trim()
       const role = roleSelect.value
 
-      if (!username || !password) {
-        alert('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน')
-        return
-      }
+      if (!username || !password) return alert('กรุณากรอกข้อมูลให้ครบ')
 
-      if (editMode) {
-        // อัพเดต
-        const { error } = await supabase
-          .from('users')
-          .update({ username, full_name, password, role })
-          .eq('id', id)
-        if (error) return alert('อัพเดตไม่สำเร็จ: ' + error.message)
-        alert('อัพเดตสำเร็จ')
-      } else {
-        // เพิ่มใหม่
-        const { error } = await supabase
-          .from('users')
-          .insert([{ username, full_name, password, role }])
-        if (error) return alert('เพิ่มไม่สำเร็จ: ' + error.message)
-        alert('เพิ่มผู้ใช้สำเร็จ')
-      }
+      const payload = { username, full_name, password, role }
+
+      const { error } = editMode
+        ? await supabase.from('users').update(payload).eq('id', id)
+        : await supabase.from('users').insert([payload])
+
+      if (error) return alert(error.message)
+      alert(editMode ? 'อัปเดตสำเร็จ' : 'เพิ่มสำเร็จ')
       editMode = false
       userForm.reset()
       formTitle.textContent = 'เพิ่มผู้ใช้ใหม่'
       loadUsers()
     })
 
-    // ปุ่มยกเลิก
     cancelBtn.onclick = () => {
       editMode = false
       userForm.reset()
       formTitle.textContent = 'เพิ่มผู้ใช้ใหม่'
     }
 
-    // ปุ่ม logout
-    document.getElementById('logoutBtn').addEventListener('click', () => {
+    // 🚪 Logout
+    document.getElementById('logoutBtn').onclick = () => {
       localStorage.removeItem('user')
       location.href = 'login.html'
-    })
+    }
 
     loadUsers()
   </script>
