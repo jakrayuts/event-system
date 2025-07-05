@@ -14,22 +14,20 @@
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen flex">
 
-  <!-- Top Menu -->
-  <nav class="bg-white shadow sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="text-xl font-bold text-blue-600">Admin Dashboard</div>
-      <div class="flex gap-4">
-        <button class="tab-btn text-gray-600 hover:text-blue-600 transition" data-target="calendar">🗕️ ปฏิทิน</button>
-        <button class="tab-btn text-gray-600 hover:text-blue-600 transition" data-target="event">📋 รายการ Event</button>
-        <button class="tab-btn text-blue-700 font-semibold underline" data-target="user">👥 จัดการผู้ใช้</button>
-        <button id="logoutBtn" class="text-red-500 hover:underline">ออกจากระบบ</button>
-      </div>
-    </div>
-  </nav>
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow h-screen sticky top-0 p-6 space-y-4">
+    <div class="text-xl font-bold text-blue-600 mb-4">Admin Panel</div>
+    <nav class="flex flex-col gap-2">
+      <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50" data-target="calendar">🗕️ ปฏิทิน</button>
+      <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50" data-target="event">📋 รายการ Event</button>
+      <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50 text-blue-700 font-semibold underline" data-target="user">👥 จัดการผู้ใช้</button>
+      <button id="logoutBtn" class="text-left text-red-500 mt-8 hover:underline">ออกจากระบบ</button>
+    </nav>
+  </aside>
 
-  <!-- Content Sections -->
+  <!-- Content Area -->
   <main class="flex-grow max-w-7xl mx-auto px-4 py-6 space-y-6">
 
     <!-- Calendar -->
@@ -100,7 +98,6 @@
       location.href = 'login.html'
     }
 
-    // Navigation tab
     const tabButtons = document.querySelectorAll('.tab-btn')
     const sections = {
       calendar: document.getElementById('section-calendar'),
@@ -118,13 +115,11 @@
       })
     })
 
-    // Logout
     document.getElementById('logoutBtn').onclick = () => {
       localStorage.removeItem('user')
       location.href = 'login.html'
     }
 
-    // User management
     const userForm = document.getElementById('userForm')
     const userIdInput = document.getElementById('userId')
     const usernameInput = document.getElementById('username')
