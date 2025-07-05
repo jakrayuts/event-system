@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <title>เพิ่มกิจกรรม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-blue-50 min-h-screen flex items-center justify-center">
+    <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-xl">
+      <h2 class="text-2xl font-bold text-blue-600 mb-6 text-center">เพิ่มกิจกรรม</h2>
+      <form id="event-form" class="space-y-4">
+        <input type="text" id="title" placeholder="หัวข้อกิจกรรม" required
+          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        <textarea id="desc" placeholder="รายละเอียด"
+          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"></textarea>
+        <div class="flex gap-4">
+          <input type="datetime-local" id="start" required
+            class="w-1/2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+          <input type="datetime-local" id="end" required
+            class="w-1/2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+        <input type="file" id="file"
+          class="w-full border rounded-xl px-4 py-2 bg-gray-50" />
+        <button type="submit"
+          class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">บันทึกกิจกรรม</button>
+      </form>
+    </div>
+
+    <script type="module">
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+      const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (!user?.id) {
+        alert('กรุณาเข้าสู่ระบบก่อน'); location.href = 'login.html'
+      }
+
+      document.getElementById('event-form').addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const title = title.value
+        const description = desc.value
+        const start = start.value
+        const end = end.value
+        const file = file.files[0]
+
+        // TODO: upload file ไป Google Drive แล้วเอา link
+        const file_url = file ? `https://drive.google.com/file/d/123456/view` : null
+
+        const { error } = await supabase.from('events').insert({
+          title, description, start_date: start, end_date: end,
+          file_url, created_by: user.id
+        })
+
+        if (error) alert('เกิดข้อผิดพลาด: ' + error.message)
+        else {
+          alert('เพิ่มกิจกรรมสำเร็จ'); e.target.reset()
+        }
+      })
+    </script>
+  </body>
+</html>
