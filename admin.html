@@ -1,36 +1,267 @@
-<h2>สร้างผู้ใช้ใหม่</h2>
-<form id="create-user-form">
-  <input type="text" id="name" placeholder="ชื่อเต็ม" required><br>
-  <input type="email" id="email" placeholder="อีเมล" required><br>
-  <input type="password" id="password" placeholder="รหัสผ่าน" required><br>
-  <select id="role">
-    <option value="user">User</option>
-    <option value="admin">Admin</option>
-  </select><br>
-  <button type="submit">สร้างผู้ใช้</button>
-</form>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - จัดการผู้ใช้</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* custom scrollbar เล็กน้อย */
+    ::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: rgba(59, 130, 246, 0.5);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
 
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-  const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
+  <!-- Header -->
+  <header class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-blue-600">Admin Dashboard</h1>
+    <button id="logoutBtn" class="text-red-600 hover:underline">ออกจากระบบ</button>
+  </header>
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  if (user.role !== 'admin') {
-    alert('เฉพาะแอดมินเท่านั้น'); location.href = 'login.html'
-  }
+  <!-- Main content -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 py-6">
+    <section class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">จัดการผู้ใช้</h2>
 
-  document.getElementById('create-user-form').addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const full_name = document.getElementById('name').value
-    const email = document.getElementById('email').value
-    const password = document.getElementById('password').value
-    const role = document.getElementById('role').value
+      <!-- Search -->
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="ค้นหาชื่อผู้ใช้ หรือ ชื่อเต็ม..."
+        class="w-full px-4 py-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
 
-    const { data, error } = await supabase.from('users').insert([
-      { full_name, email, password, role }
-    ])
+      <!-- User Table -->
+      <div class="overflow-x-auto max-h-[450px]">
+        <table class="min-w-full table-auto border-collapse border border-gray-200">
+          <thead class="bg-blue-100 sticky top-0">
+            <tr>
+              <th class="border border-gray-300 px-4 py-2 text-left">Username</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">ชื่อเต็ม</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">Role</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">วันที่สร้าง</th>
+              <th class="border border-gray-300 px-4 py-2 text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody" class="text-gray-700 max-h-[400px] overflow-y-auto">
+            <!-- users data มาเติมที่นี่ -->
+          </tbody>
+        </table>
+      </div>
 
-    if (error) alert('เกิดข้อผิดพลาด: ' + error.message)
-    else alert('สร้างผู้ใช้สำเร็จ')
-  })
-</script>
+      <!-- Add/Edit User Form -->
+      <div class="mt-8 border-t pt-6">
+        <h3 id="formTitle" class="text-lg font-semibold mb-4">เพิ่มผู้ใช้ใหม่</h3>
+        <form id="userForm" class="space-y-4 max-w-md">
+          <input type="hidden" id="userId" />
+
+          <input
+            type="text"
+            id="username"
+            placeholder="ชื่อผู้ใช้ (username)"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            id="fullName"
+            placeholder="ชื่อเต็ม"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="password"
+            id="password"
+            placeholder="รหัสผ่าน"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <select
+            id="role"
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          >
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <div class="flex gap-4">
+            <button
+              type="submit"
+              id="saveBtn"
+              class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
+            >
+              บันทึก
+            </button>
+            <button
+              type="button"
+              id="cancelBtn"
+              class="bg-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-400 transition"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabase = createClient(
+      'https://yyxovuybwuqvgtikujyi.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ'
+    )
+
+    // ตรวจสอบ login และ role (ต้องแก้ให้ตรงกับระบบคุณ)
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!user.id || user.role !== 'admin') {
+      alert('เฉพาะแอดมินเท่านั้น')
+      location.href = 'login.html'
+    }
+
+    const userTableBody = document.getElementById('userTableBody')
+    const searchInput = document.getElementById('searchInput')
+    const userForm = document.getElementById('userForm')
+    const formTitle = document.getElementById('formTitle')
+    const userIdInput = document.getElementById('userId')
+    const usernameInput = document.getElementById('username')
+    const fullNameInput = document.getElementById('fullName')
+    const passwordInput = document.getElementById('password')
+    const roleSelect = document.getElementById('role')
+    const saveBtn = document.getElementById('saveBtn')
+    const cancelBtn = document.getElementById('cancelBtn')
+
+    let allUsers = []
+    let editMode = false
+
+    // โหลดผู้ใช้ทั้งหมด
+    async function loadUsers() {
+      const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
+      if (error) {
+        alert('โหลดข้อมูลผู้ใช้ล้มเหลว: ' + error.message)
+        return
+      }
+      allUsers = data
+      renderUserTable(data)
+    }
+
+    // แสดงตารางผู้ใช้
+    function renderUserTable(users) {
+      if (!users.length) {
+        userTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">ไม่พบข้อมูลผู้ใช้</td></tr>`
+        return
+      }
+      userTableBody.innerHTML = users.map(u => `
+        <tr class="hover:bg-gray-50">
+          <td class="border border-gray-300 px-4 py-2">${u.username}</td>
+          <td class="border border-gray-300 px-4 py-2">${u.full_name || ''}</td>
+          <td class="border border-gray-300 px-4 py-2 capitalize">${u.role}</td>
+          <td class="border border-gray-300 px-4 py-2">${new Date(u.created_at).toLocaleString()}</td>
+          <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
+            <button data-id="${u.id}" class="editBtn text-blue-600 hover:underline">แก้ไข</button>
+            <button data-id="${u.id}" class="deleteBtn text-red-600 hover:underline">ลบ</button>
+          </td>
+        </tr>
+      `).join('')
+      attachTableEvents()
+    }
+
+    // ผูก event ปุ่มแก้ไข/ลบ ในตาราง
+    function attachTableEvents() {
+      document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.id
+          const user = allUsers.find(u => u.id === id)
+          if (!user) return alert('ไม่พบข้อมูลผู้ใช้')
+          editMode = true
+          formTitle.textContent = 'แก้ไขผู้ใช้'
+          userIdInput.value = user.id
+          usernameInput.value = user.username
+          fullNameInput.value = user.full_name || ''
+          passwordInput.value = user.password || ''  // ถ้าไม่ใช้ hash
+          roleSelect.value = user.role
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+      })
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('ต้องการลบผู้ใช้นี้จริงหรือไม่?')) return
+          const id = btn.dataset.id
+          const { error } = await supabase.from('users').delete().eq('id', id)
+          if (error) return alert('ลบไม่สำเร็จ: ' + error.message)
+          alert('ลบสำเร็จ')
+          loadUsers()
+        }
+      })
+    }
+
+    // ฟิลเตอร์ค้นหา
+    searchInput.addEventListener('input', e => {
+      const q = e.target.value.toLowerCase()
+      const filtered = allUsers.filter(
+        u => u.username.toLowerCase().includes(q) || (u.full_name && u.full_name.toLowerCase().includes(q))
+      )
+      renderUserTable(filtered)
+    })
+
+    // ฟอร์มบันทึกเพิ่ม/แก้ไขผู้ใช้
+    userForm.addEventListener('submit', async e => {
+      e.preventDefault()
+      const id = userIdInput.value
+      const username = usernameInput.value.trim()
+      const full_name = fullNameInput.value.trim()
+      const password = passwordInput.value.trim()
+      const role = roleSelect.value
+
+      if (!username || !password) {
+        alert('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน')
+        return
+      }
+
+      if (editMode) {
+        // อัพเดต
+        const { error } = await supabase
+          .from('users')
+          .update({ username, full_name, password, role })
+          .eq('id', id)
+        if (error) return alert('อัพเดตไม่สำเร็จ: ' + error.message)
+        alert('อัพเดตสำเร็จ')
+      } else {
+        // เพิ่มใหม่
+        const { error } = await supabase
+          .from('users')
+          .insert([{ username, full_name, password, role }])
+        if (error) return alert('เพิ่มไม่สำเร็จ: ' + error.message)
+        alert('เพิ่มผู้ใช้สำเร็จ')
+      }
+      editMode = false
+      userForm.reset()
+      formTitle.textContent = 'เพิ่มผู้ใช้ใหม่'
+      loadUsers()
+    })
+
+    // ปุ่มยกเลิก
+    cancelBtn.onclick = () => {
+      editMode = false
+      userForm.reset()
+      formTitle.textContent = 'เพิ่มผู้ใช้ใหม่'
+    }
+
+    // ปุ่ม logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('user')
+      location.href = 'login.html'
+    })
+
+    loadUsers()
+  </script>
+</body>
+</html>
