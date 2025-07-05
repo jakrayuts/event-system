@@ -1,0 +1,36 @@
+<h2>สร้างผู้ใช้ใหม่</h2>
+<form id="create-user-form">
+  <input type="text" id="name" placeholder="ชื่อเต็ม" required><br>
+  <input type="email" id="email" placeholder="อีเมล" required><br>
+  <input type="password" id="password" placeholder="รหัสผ่าน" required><br>
+  <select id="role">
+    <option value="user">User</option>
+    <option value="admin">Admin</option>
+  </select><br>
+  <button type="submit">สร้างผู้ใช้</button>
+</form>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+  const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  if (user.role !== 'admin') {
+    alert('เฉพาะแอดมินเท่านั้น'); location.href = 'login.html'
+  }
+
+  document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const full_name = document.getElementById('name').value
+    const email = document.getElementById('email').value
+    const password = document.getElementById('password').value
+    const role = document.getElementById('role').value
+
+    const { data, error } = await supabase.from('users').insert([
+      { full_name, email, password, role }
+    ])
+
+    if (error) alert('เกิดข้อผิดพลาด: ' + error.message)
+    else alert('สร้างผู้ใช้สำเร็จ')
+  })
+</script>
