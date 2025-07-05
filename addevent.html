@@ -1,61 +1,184 @@
 <!DOCTYPE html>
 <html lang="th">
-  <head>
-    <meta charset="UTF-8" />
-    <title>เพิ่มกิจกรรม</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-blue-50 min-h-screen flex items-center justify-center">
-    <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-xl">
-      <h2 class="text-2xl font-bold text-blue-600 mb-6 text-center">เพิ่มกิจกรรม</h2>
+<head>
+  <meta charset="UTF-8" />
+  <title>เพิ่มกิจกรรมและดูปฏิทิน</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #calendar { max-width: 900px; margin: auto; }
+  </style>
+</head>
+<body class="bg-blue-50 min-h-screen">
+
+  <header class="bg-white shadow p-4 mb-6">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-700">เพิ่มกิจกรรมและปฏิทิน</h1>
+      <button id="logoutBtn" class="text-red-600 hover:underline">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- ฟอร์มเพิ่มกิจกรรม -->
+    <section class="bg-white rounded-2xl shadow p-6 col-span-1 md:col-span-1">
+      <h2 class="text-xl font-semibold mb-4">เพิ่มกิจกรรมใหม่</h2>
       <form id="event-form" class="space-y-4">
         <input type="text" id="title" placeholder="หัวข้อกิจกรรม" required
-          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
         <textarea id="desc" placeholder="รายละเอียด"
-          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300"></textarea>
+          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
         <div class="flex gap-4">
           <input type="datetime-local" id="start" required
-            class="w-1/2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+            class="w-1/2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
           <input type="datetime-local" id="end" required
-            class="w-1/2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+            class="w-1/2 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400" />
         </div>
-        <input type="file" id="file"
-          class="w-full border rounded-xl px-4 py-2 bg-gray-50" />
+        <input type="file" id="file" class="w-full border rounded-xl px-4 py-2 bg-gray-50" />
         <button type="submit"
           class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">บันทึกกิจกรรม</button>
       </form>
-    </div>
+    </section>
 
-    <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+    <!-- ปฏิทินโชว์กิจกรรม -->
+    <section class="bg-white rounded-2xl shadow p-6 col-span-1 md:col-span-2">
+      <h2 class="text-xl font-semibold mb-4">ปฏิทินกิจกรรม</h2>
+      <div id="calendar"></div>
 
-      const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      if (!user?.id) {
-        alert('กรุณาเข้าสู่ระบบก่อน'); location.href = 'login.html'
+      <h2 class="text-xl font-semibold mt-8 mb-4">ประวัติกิจกรรมของคุณ</h2>
+      <div id="history" class="overflow-auto max-h-64 border rounded p-4 bg-gray-50">
+        กำลังโหลด...
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
+
+    // เช็กล็อกอิน
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!user?.id) {
+      alert('กรุณาเข้าสู่ระบบก่อน')
+      location.href = 'login.html'
+    }
+
+    // Logout ปุ่ม
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('user')
+      location.href = 'login.html'
+    })
+
+    // โหลดกิจกรรมทั้งหมด สำหรับปฏิทิน
+    async function loadCalendarEvents() {
+      const { data, error } = await supabase.from('events').select('*')
+      if (error) {
+        alert('โหลดกิจกรรมล้มเหลว: ' + error.message)
+        return []
+      }
+      return data || []
+    }
+
+    // โหลดประวัติกิจกรรมของ user ปัจจุบัน
+    async function loadUserHistory(userId) {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        document.getElementById('history').innerText = 'โหลดประวัติไม่สำเร็จ'
+        return
+      }
+      if (!data || data.length === 0) {
+        document.getElementById('history').innerText = 'ยังไม่มีประวัติการเพิ่มกิจกรรม'
+        return
       }
 
-      document.getElementById('event-form').addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const title = title.value
-        const description = desc.value
-        const start = start.value
-        const end = end.value
-        const file = file.files[0]
+      const list = data.map(ev => `
+        <div class="mb-3 border-b pb-2">
+          <div><strong>หัวข้อ:</strong> ${ev.title}</div>
+          <div><strong>วันที่:</strong> ${new Date(ev.start_date).toLocaleString()} - ${new Date(ev.end_date).toLocaleString()}</div>
+          <div><strong>เพิ่มเมื่อ:</strong> ${new Date(ev.created_at).toLocaleString()}</div>
+          ${ev.file_url ? `<a href="${ev.file_url}" target="_blank" class="text-blue-600 hover:underline">ไฟล์แนบ</a>` : ''}
+        </div>
+      `).join('')
+      document.getElementById('history').innerHTML = list
+    }
 
-        // TODO: upload file ไป Google Drive แล้วเอา link
-        const file_url = file ? `https://drive.google.com/file/d/123456/view` : null
+    // สร้าง FullCalendar
+    async function renderCalendar() {
+      const events = await loadCalendarEvents()
+      const calendarEl = document.getElementById('calendar')
 
-        const { error } = await supabase.from('events').insert({
-          title, description, start_date: start, end_date: end,
-          file_url, created_by: user.id
-        })
-
-        if (error) alert('เกิดข้อผิดพลาด: ' + error.message)
-        else {
-          alert('เพิ่มกิจกรรมสำเร็จ'); e.target.reset()
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        locale: 'th',
+        events: events.map(ev => ({
+          title: ev.title,
+          start: ev.start_date,
+          end: ev.end_date,
+          url: ev.file_url,
+          description: ev.description
+        })),
+        eventClick: info => {
+          if (info.event.url) {
+            info.jsEvent.preventDefault()
+            window.open(info.event.url, '_blank')
+          }
         }
       })
-    </script>
-  </body>
+
+      calendar.render()
+    }
+
+    // เพิ่มกิจกรรมใหม่
+    document.getElementById('event-form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const title = title.value.trim()
+      const description = desc.value.trim()
+      const start = start.value
+      const end = end.value
+      const fileInput = file.files[0]
+
+      // TODO: upload file ไป Google Drive ผ่าน Cloud Function แล้วเอา URL มาใส่ใน file_url
+      // ตอนนี้ยังไม่ทำ upload จริง ใส่ null
+      let file_url = null
+
+      if (fileInput) {
+        alert('ยังไม่รองรับการอัปโหลดไฟล์ในตัวอย่างนี้')
+      }
+
+      const { error } = await supabase.from('events').insert([{
+        title,
+        description,
+        start_date: start,
+        end_date: end,
+        file_url,
+        created_by: user.id
+      }])
+
+      if (error) {
+        alert('บันทึกกิจกรรมไม่สำเร็จ: ' + error.message)
+        return
+      }
+
+      alert('บันทึกกิจกรรมสำเร็จ')
+      e.target.reset()
+      loadUserHistory(user.id)
+      renderCalendar()
+    })
+
+    // เริ่มต้น
+    loadUserHistory(user.id)
+    renderCalendar()
+  </script>
+</body>
 </html>
