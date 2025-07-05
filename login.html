@@ -1,48 +1,48 @@
 <!DOCTYPE html>
 <html lang="th">
-  <head>
-    <meta charset="UTF-8" />
-    <title>เข้าสู่ระบบ</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gradient-to-br from-blue-100 to-white min-h-screen flex items-center justify-center">
-    <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">เข้าสู่ระบบ</h2>
-      <form id="login-form" class="space-y-4">
-        <input type="email" id="email" placeholder="อีเมล" required
-          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
-        <input type="password" id="password" placeholder="รหัสผ่าน" required
-          class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
-        <button type="submit"
-          class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">เข้าสู่ระบบ</button>
-      </form>
-    </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>เข้าสู่ระบบ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-white min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">เข้าสู่ระบบ</h2>
+    <form id="login-form" class="space-y-4">
+      <input type="text" id="username" placeholder="ชื่อผู้ใช้" required
+        class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+      <input type="password" id="password" placeholder="รหัสผ่าน" required
+        class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300" />
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">เข้าสู่ระบบ</button>
+    </form>
+  </div>
 
-    <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-      const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
+    const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
 
-      document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const email = email.value
-        const password = password.value
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const username = document.getElementById('username').value.trim()
+      const password = document.getElementById('password').value.trim()
 
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', email)
-          .eq('password', password)
-          .single()
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password)
+        .single()
 
-        if (error || !data) {
-          alert('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
-          return
-        }
+      if (error || !data) {
+        alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
+        return
+      }
 
-        localStorage.setItem('user', JSON.stringify(data))
-        window.location.href = data.role === 'admin' ? 'admin.html' : 'addevent.html'
-      })
-    </script>
-  </body>
+      localStorage.setItem('user', JSON.stringify(data))
+      window.location.href = data.role === 'admin' ? 'admin.html' : 'addevent.html'
+    })
+  </script>
+</body>
 </html>
