@@ -315,22 +315,39 @@ document.querySelector('[data-target="calendar"]').click()
     }
 
     eventForm.addEventListener('submit', async e => {
-      e.preventDefault()
+  e.preventDefault()
 
-      const payload = {
-        title: eventTitleInput.value.trim(),
-        description: eventDescriptionInput.value.trim(),
-        start_date: eventStartInput.value,
-        start_time: eventStartTimeInput.value,
-        end_date: eventEndInput.value,
-        end_time: eventEndTimeInput.value,
-        file_url: eventFileUrlInput.value.trim(),
-        created_by: user.id
-      }
+  const payload = {
+    title: eventTitleInput.value.trim(),
+    description: eventDescriptionInput.value.trim(),
+    start_date: combineDateTime(eventStartInput.value, eventStartTimeInput.value),
+    end_date: combineDateTime(eventEndInput.value, eventEndTimeInput.value),
+    file_url: eventFileUrlInput.value.trim(),
+    created_by: user.id
+  }
 
-      if (!payload.start_date || !payload.end_date || !payload.start_time || !payload.end_time) {
-        return alert('กรุณากรอกวันที่และเวลาให้ครบถ้วน')
-      }
+  if (!payload.start_date || !payload.end_date) {
+    return alert('กรุณากรอกวันที่และเวลาให้ครบถ้วน')
+  }
+
+  if (payload.end_date < payload.start_date) {
+    return alert('วันที่/เวลาสิ้นสุดต้องไม่ก่อนวันที่/เวลาเริ่มต้น')
+  }
+
+  if (eventEditMode) {
+    const { error } = await supabase.from('events').update(payload).eq('id', eventIdInput.value)
+    if (error) return alert('อัพเดต Event ไม่สำเร็จ: ' + error.message)
+    eventEditMode = false
+  } else {
+    const { error } = await supabase.from('events').insert([payload])
+    if (error) return alert('สร้าง Event ไม่สำเร็จ: ' + error.message)
+  }
+
+  eventForm.reset()
+  eventSuccess.classList.remove('hidden')
+  setTimeout(() => eventSuccess.classList.add('hidden'), 3000)
+  loadEvents()
+})
 
       // เช็คเวลาให้ถูกต้อง (รวมเป็น Date แล้วเทียบ)
       const startDT = new Date(payload.start_date + 'T' + payload.start_time)
