@@ -4,14 +4,8 @@
   <meta charset="UTF-8" />
   <title>Admin Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
-  <!-- FullCalendar Thai Locale -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales-all.global.min.js"></script>
-
   <style>
     ::-webkit-scrollbar {
       width: 8px;
@@ -27,7 +21,7 @@
   <aside class="w-64 bg-white shadow h-screen sticky top-0 p-6 space-y-4">
     <div class="text-xl font-bold text-blue-600 mb-4">Admin Panel</div>
     <nav class="flex flex-col gap-2">
-      <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50" data-target="calendar">🗕️ ปฏิทิน</button>
+      <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50" data-target="calendar">📅 ปฏิทิน</button>
       <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50" data-target="event">📋 รายการ Event</button>
       <button class="tab-btn text-left px-4 py-2 rounded hover:bg-blue-50 text-blue-700 font-semibold" data-target="user">👥 จัดการผู้ใช้</button>
       <button id="logoutBtn" class="text-left px-4 py-2 rounded hover:bg-blue-50 text-red-500 mt-8">🚪 ออกจากระบบ</button>
@@ -36,30 +30,76 @@
 
   <!-- Main Content -->
   <main class="flex-grow max-w-7xl mx-auto px-4 py-6 space-y-6">
-    <!-- ปฏิทิน -->
+    <!-- Calendar -->
     <section id="section-calendar" class="hidden">
       <div class="bg-white p-6 rounded-xl shadow">
-        <h2 class="text-xl font-semibold mb-4">🗕️ ปฏิทินกิจกรรม</h2>
+        <h2 class="text-xl font-semibold mb-4">📅 ปฏิทินกิจกรรม</h2>
         <div id="calendar" class="bg-white p-6 rounded-2xl shadow-lg min-h-[600px]"></div>
       </div>
     </section>
-    <!-- รายการ Event -->
+
+    <!-- Event List -->
     <section id="section-event" class="hidden">
       <div class="bg-white p-6 rounded-xl shadow">
         <h2 class="text-xl font-semibold mb-4">📋 รายการ Event</h2>
-        <p class="text-gray-600">กำลังพัฒนา</p>
+        <table class="w-full table-auto border" id="eventTable">
+          <thead class="bg-blue-100">
+            <tr>
+              <th class="border px-4 py-2">ชื่อกิจกรรม</th>
+              <th class="border px-4 py-2">วันเริ่ม</th>
+              <th class="border px-4 py-2">วันสิ้นสุด</th>
+              <th class="border px-4 py-2">ลิงก์ไฟล์</th>
+            </tr>
+          </thead>
+          <tbody id="eventTableBody" class="text-sm"></tbody>
+        </table>
       </div>
     </section>
-    <!-- จัดการผู้ใช้ -->
+
+    <!-- User Management -->
     <section id="section-user">
-      <!-- [Content omitted for brevity, already in your code above] -->
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-xl font-semibold mb-4">👥 จัดการผู้ใช้</h2>
+        <input id="searchInput" type="text" placeholder="ค้นหา..." class="w-full px-4 py-2 border rounded-lg mb-4" />
+        <div class="overflow-x-auto">
+          <table class="min-w-full table-auto border">
+            <thead class="bg-blue-100">
+              <tr>
+                <th class="border px-4 py-2">Username</th>
+                <th class="border px-4 py-2">ชื่อเต็ม</th>
+                <th class="border px-4 py-2">Role</th>
+                <th class="border px-4 py-2">สร้างเมื่อ</th>
+                <th class="border px-4 py-2">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+        <form id="userForm" class="space-y-4 mt-6">
+          <input type="hidden" id="userId" />
+          <input type="text" id="username" placeholder="Username" required class="w-full px-4 py-2 border rounded-lg" />
+          <input type="text" id="fullName" placeholder="ชื่อเต็ม" required class="w-full px-4 py-2 border rounded-lg" />
+          <input type="password" id="password" placeholder="รหัสผ่าน" required class="w-full px-4 py-2 border rounded-lg" />
+          <select id="role" class="w-full px-4 py-2 border rounded-lg">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div class="flex gap-4">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg">บันทึก</button>
+            <button type="button" id="cancelBtn" class="bg-gray-300 px-4 py-2 rounded-lg">ยกเลิก</button>
+          </div>
+        </form>
+      </div>
     </section>
   </main>
 
   <!-- Script -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-    const supabase = createClient('https://yyxovuybwuqvgtikujyi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ')
+    const supabase = createClient(
+      'https://yyxovuybwuqvgtikujyi.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ'
+    )
 
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     if (!user.id || user.role !== 'admin') {
@@ -110,6 +150,17 @@
           calendar.render()
           calendarInitialized = true
         }
+
+        if (target === 'event') {
+          const { data: events } = await supabase.from('events').select('*')
+          document.getElementById('eventTableBody').innerHTML = events.map(ev => `
+            <tr>
+              <td class="border px-4 py-2">${ev.title}</td>
+              <td class="border px-4 py-2">${ev.start_date}</td>
+              <td class="border px-4 py-2">${ev.end_date}</td>
+              <td class="border px-4 py-2"><a href="${ev.file_url}" target="_blank" class="text-blue-600 underline">เปิด</a></td>
+            </tr>`).join('')
+        }
       })
     })
 
@@ -117,6 +168,102 @@
       localStorage.removeItem('user')
       location.href = 'index.html'
     }
+
+    // ========== ผู้ใช้ ==========
+    const userForm = document.getElementById('userForm')
+    const userIdInput = document.getElementById('userId')
+    const usernameInput = document.getElementById('username')
+    const fullNameInput = document.getElementById('fullName')
+    const passwordInput = document.getElementById('password')
+    const roleSelect = document.getElementById('role')
+    const cancelBtn = document.getElementById('cancelBtn')
+    const userTableBody = document.getElementById('userTableBody')
+    const searchInput = document.getElementById('searchInput')
+
+    let allUsers = []
+    let editMode = false
+
+    async function loadUsers() {
+      const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
+      if (error) return alert('โหลดผู้ใช้ล้มเหลว')
+      allUsers = data
+      renderUserTable(data)
+    }
+
+    function renderUserTable(users) {
+      if (!users.length) {
+        userTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">ไม่มีข้อมูล</td></tr>'
+        return
+      }
+      userTableBody.innerHTML = users.map(u => `
+        <tr>
+          <td class="border px-4 py-2">${u.username}</td>
+          <td class="border px-4 py-2">${u.full_name || ''}</td>
+          <td class="border px-4 py-2">${u.role}</td>
+          <td class="border px-4 py-2">${new Date(u.created_at).toLocaleString()}</td>
+          <td class="border px-4 py-2 text-center space-x-2">
+            <button class="editBtn text-blue-600" data-id="${u.id}">แก้ไข</button>
+            <button class="deleteBtn text-red-600" data-id="${u.id}">ลบ</button>
+          </td>
+        </tr>`).join('')
+      attachTableEvents()
+    }
+
+    function attachTableEvents() {
+      document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.onclick = () => {
+          const u = allUsers.find(x => x.id === btn.dataset.id)
+          if (!u) return alert('ไม่พบ')
+          editMode = true
+          userIdInput.value = u.id
+          usernameInput.value = u.username
+          fullNameInput.value = u.full_name
+          passwordInput.value = u.password
+          roleSelect.value = u.role
+        }
+      })
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('ลบผู้ใช้นี้?')) return
+          await supabase.from('users').delete().eq('id', btn.dataset.id)
+          loadUsers()
+        }
+      })
+    }
+
+    searchInput.addEventListener('input', e => {
+      const q = e.target.value.toLowerCase()
+      const filtered = allUsers.filter(u =>
+        u.username.toLowerCase().includes(q) ||
+        (u.full_name && u.full_name.toLowerCase().includes(q))
+      )
+      renderUserTable(filtered)
+    })
+
+    userForm.onsubmit = async e => {
+      e.preventDefault()
+      const payload = {
+        username: usernameInput.value,
+        full_name: fullNameInput.value,
+        password: passwordInput.value,
+        role: roleSelect.value
+      }
+      if (editMode) {
+        await supabase.from('users').update(payload).eq('id', userIdInput.value)
+        editMode = false
+      } else {
+        await supabase.from('users').insert([payload])
+      }
+      userForm.reset()
+      loadUsers()
+    }
+
+    cancelBtn.onclick = () => {
+      editMode = false
+      userForm.reset()
+    }
+
+    loadUsers()
   </script>
 </body>
 </html>
