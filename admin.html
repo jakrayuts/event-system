@@ -48,7 +48,7 @@
       <div class="bg-white p-6 rounded-xl shadow space-y-6">
         <h2 class="text-xl font-semibold">📋 รายการ Event</h2>
 
-        <form id="eventForm" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <form id="eventForm" class="grid grid-cols-2 md:grid-cols-4 gap-4" novalidate>
           <input type="hidden" id="eventId" />
           <input type="text" id="eventTitle" placeholder="หัวข้อกิจกรรม" required class="px-4 py-2 border rounded col-span-2" />
           <input type="text" id="eventDescription" placeholder="คำอธิบาย" class="px-4 py-2 border rounded col-span-2" />
@@ -115,7 +115,7 @@
           </table>
         </div>
 
-        <form id="userForm" class="space-y-4 mt-6">
+        <form id="userForm" class="space-y-4 mt-6" novalidate>
           <input type="hidden" id="userId" />
           <input type="text" id="username" placeholder="Username" required class="w-full px-4 py-2 border rounded-lg" />
           <input type="text" id="fullName" placeholder="ชื่อเต็ม" required class="w-full px-4 py-2 border rounded-lg" />
@@ -135,224 +135,246 @@
 
   <!-- Script -->
   <script type="module">
-   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-const supabase = createClient(
-  'https://yyxovuybwuqvgtikujyi.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ'
-)
+    const supabase = createClient(
+      'https://yyxovuybwuqvgtikujyi.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eG92dXlid3Vxdmd0aWt1anlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwODE3MzQsImV4cCI6MjA2NjY1NzczNH0.QgvI_-w55PFXY0oz8U4ZeqFp4RDQlNFEMA4B40kkVtQ'
+    )
 
-const user = JSON.parse(localStorage.getItem('user') || '{}')
-if (!user.id || user.role !== 'admin') {
-  alert('เฉพาะแอดมินเท่านั้น')
-  location.href = 'login.html'
-}
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!user.id || user.role !== 'admin') {
+      alert('เฉพาะแอดมินเท่านั้น')
+      location.href = 'login.html'
+    }
 
-// Tab control
-const tabButtons = document.querySelectorAll('.tab-btn')
-const sections = {
-  calendar: document.getElementById('section-calendar'),
-  event: document.getElementById('section-event'),
-  user: document.getElementById('section-user')
-}
+    // Elements
+    const tabButtons = document.querySelectorAll('.tab-btn')
+    const sections = {
+      calendar: document.getElementById('section-calendar'),
+      event: document.getElementById('section-event'),
+      user: document.getElementById('section-user')
+    }
+    const eventForm = document.getElementById('eventForm')
+    const eventIdInput = document.getElementById('eventId')
+    const eventTitleInput = document.getElementById('eventTitle')
+    const eventDescriptionInput = document.getElementById('eventDescription')
+    const eventStartInput = document.getElementById('eventStart')
+    const eventStartTimeInput = document.getElementById('eventStartTime')
+    const eventEndInput = document.getElementById('eventEnd')
+    const eventEndTimeInput = document.getElementById('eventEndTime')
+    const eventFileUrlInput = document.getElementById('eventFileUrl')
+    const eventSuccess = document.getElementById('eventSuccess')
+    const eventCancelBtn = document.getElementById('eventCancelBtn')
+    const eventTableBody = document.getElementById('eventTableBody')
 
-let calendarInitialized = false
-let calendar
+    let calendarInitialized = false
+    let calendar
+    let eventsCache = []
+    let eventEditMode = false
 
-function combineDateTime(date, time) {
-  if (!date) return null
-  if (!time) time = '00:00'
-  return `${date}T${time}:00`
-}
+    function combineDateTime(date, time) {
+      if (!date) return null
+      if (!time) time = '00:00'
+      return `${date}T${time}:00`
+    }
 
-// โหลด Event จาก DB และแสดงทั้งในตารางและปฏิทิน
-async function loadEvents() {
-  const { data, error } = await supabase.from('events').select('*').order('start_date', { ascending: true })
-  if (error) return alert('โหลด Event ล้มเหลว: ' + error.message)
-
-  eventsCache = data
-
-  // แสดงในตาราง
-  renderEventTable(data)
-
-  // แสดงในปฏิทิน (ถ้าสร้างแล้ว)
-  if (calendarInitialized) {
-    calendar.removeAllEvents()
-    data.forEach(ev => {
-      calendar.addEvent({
-        id: ev.id,
-        title: ev.title,
-        start: combineDateTime(ev.start_date, ev.start_time),
-        end: combineDateTime(ev.end_date, ev.end_time),
-        url: ev.file_url || null,
-      })
-    })
-  }
-}
-
-function renderEventTable(events) {
-  if (!events.length) {
-    eventTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500">ไม่มีข้อมูล</td></tr>`
-    return
-  }
-  eventTableBody.innerHTML = events.map(ev => {
-    const startDT = new Date(combineDateTime(ev.start_date, ev.start_time))
-    const endDT = new Date(combineDateTime(ev.end_date, ev.end_time))
-    return `
-      <tr>
-        <td class="border px-4 py-2">${ev.title}</td>
-        <td class="border px-4 py-2">${ev.description || ''}</td>
-        <td class="border px-4 py-2">${startDT.toLocaleDateString('th-TH')} ${startDT.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</td>
-        <td class="border px-4 py-2">${endDT.toLocaleDateString('th-TH')} ${endDT.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</td>
-        <td class="border px-4 py-2">
-          ${ev.file_url ? `<a href="${ev.file_url}" target="_blank" class="text-blue-600 underline">ไฟล์แนบ</a>` : '-'}
-        </td>
-        <td class="border px-4 py-2 text-center space-x-2">
-          <button class="editEventBtn text-blue-600" data-id="${ev.id}">แก้ไข</button>
-          <button class="deleteEventBtn text-red-600" data-id="${ev.id}">ลบ</button>
-        </td>
-      </tr>
-    `
-  }).join('')
-  attachEventTableEvents()
-}
-
-function attachEventTableEvents() {
-  document.querySelectorAll('.editEventBtn').forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.dataset.id
-      const ev = eventsCache.find(x => x.id == id)
-      if (!ev) return alert('ไม่พบข้อมูล Event นี้')
-      eventEditMode = true
-      eventIdInput.value = ev.id
-      eventTitleInput.value = ev.title
-      eventDescriptionInput.value = ev.description || ''
-      eventStartInput.value = ev.start_date || ''
-      eventStartTimeInput.value = ev.start_time ? ev.start_time.slice(0,5) : ''
-      eventEndInput.value = ev.end_date || ''
-      eventEndTimeInput.value = ev.end_time ? ev.end_time.slice(0,5) : ''
-      eventFileUrlInput.value = ev.file_url || ''
-      // Switch to event tab
-      for (let key in sections) {
-        sections[key].classList.toggle('hidden', key !== 'event')
+    // โหลด Event จาก DB และแสดงทั้งในตารางและปฏิทิน
+    async function loadEvents() {
+      const { data, error } = await supabase.from('events').select('*').order('start_date', { ascending: true })
+      if (error) {
+        alert('โหลด Event ล้มเหลว: ' + error.message)
+        return
       }
-      tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold'))
-      document.querySelector('[data-target="event"]').classList.add('text-blue-700', 'font-semibold')
+
+      eventsCache = data || []
+
+      // แสดงในตาราง
+      renderEventTable(eventsCache)
+
+      // แสดงในปฏิทิน (ถ้าสร้างแล้ว)
+      if (calendarInitialized) {
+        calendar.removeAllEvents()
+        eventsCache.forEach(ev => {
+          calendar.addEvent({
+            id: ev.id,
+            title: ev.title,
+            start: combineDateTime(ev.start_date, ev.start_time),
+            end: combineDateTime(ev.end_date, ev.end_time),
+            url: ev.file_url || null,
+          })
+        })
+      }
     }
-  })
 
-  document.querySelectorAll('.deleteEventBtn').forEach(btn => {
-    btn.onclick = async () => {
-      if (!confirm('ลบ Event นี้?')) return
-      const { error } = await supabase.from('events').delete().eq('id', btn.dataset.id)
-      if (error) return alert('ลบ Event ไม่สำเร็จ: ' + error.message)
-      await loadEvents()
+    function renderEventTable(events) {
+      if (!events.length) {
+        eventTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500">ไม่มีข้อมูล</td></tr>`
+        return
+      }
+      eventTableBody.innerHTML = events.map(ev => {
+        const startDT = new Date(combineDateTime(ev.start_date, ev.start_time))
+        const endDT = new Date(combineDateTime(ev.end_date, ev.end_time))
+        return `
+          <tr>
+            <td class="border px-4 py-2">${ev.title}</td>
+            <td class="border px-4 py-2">${ev.description || ''}</td>
+            <td class="border px-4 py-2">${startDT.toLocaleDateString('th-TH')} ${startDT.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</td>
+            <td class="border px-4 py-2">${endDT.toLocaleDateString('th-TH')} ${endDT.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'})}</td>
+            <td class="border px-4 py-2">
+              ${ev.file_url ? `<a href="${ev.file_url}" target="_blank" class="text-blue-600 underline">ไฟล์แนบ</a>` : '-'}
+            </td>
+            <td class="border px-4 py-2 text-center space-x-2">
+              <button class="editEventBtn text-blue-600" data-id="${ev.id}">แก้ไข</button>
+              <button class="deleteEventBtn text-red-600" data-id="${ev.id}">ลบ</button>
+            </td>
+          </tr>
+        `
+      }).join('')
+      attachEventTableEvents()
     }
-  })
-}
 
-eventForm.addEventListener('submit', async e => {
-  e.preventDefault()
-
-  const payload = {
-    title: eventTitleInput.value.trim(),
-    description: eventDescriptionInput.value.trim(),
-    start_date: eventStartInput.value,
-    start_time: eventStartTimeInput.value,
-    end_date: eventEndInput.value,
-    end_time: eventEndTimeInput.value,
-    file_url: eventFileUrlInput.value.trim(),
-    created_by: user.id
-  }
-
-  if (!payload.start_date || !payload.start_time || !payload.end_date || !payload.end_time) {
-    return alert('กรุณากรอกวันที่และเวลาให้ครบถ้วน')
-  }
-
-  const startDT = new Date(combineDateTime(payload.start_date, payload.start_time))
-  const endDT = new Date(combineDateTime(payload.end_date, payload.end_time))
-  if (endDT < startDT) {
-    return alert('วันที่/เวลาสิ้นสุดต้องไม่ก่อนวันที่/เวลาเริ่มต้น')
-  }
-
-  let error
-  if (eventEditMode) {
-    const res = await supabase.from('events').update(payload).eq('id', eventIdInput.value)
-    error = res.error
-    eventEditMode = false
-  } else {
-    const res = await supabase.from('events').insert([payload])
-    error = res.error
-  }
-
-  if (error) {
-    return alert('บันทึก Event ไม่สำเร็จ: ' + error.message)
-  }
-
-  eventForm.reset()
-  eventSuccess.classList.remove('hidden')
-  setTimeout(() => eventSuccess.classList.add('hidden'), 3000)
-  await loadEvents()
-})
-
-// Event Cancel button
-eventCancelBtn.onclick = () => {
-  eventEditMode = false
-  eventForm.reset()
-}
-
-// FullCalendar init on tab click
-tabButtons.forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const target = btn.dataset.target
-    for (let key in sections) {
-      sections[key].classList.toggle('hidden', key !== target)
-    }
-    tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold'))
-    btn.classList.add('text-blue-700', 'font-semibold')
-
-    if (target === 'calendar' && !calendarInitialized) {
-      const { data: events, error } = await supabase.from('events').select('*')
-      if (error) return alert('โหลด Event ล้มเหลว: ' + error.message)
-
-      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-        initialView: 'dayGridMonth',
-        locale: 'th',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,listWeek'
-        },
-        events: events.map(ev => ({
-          id: ev.id,
-          title: ev.title,
-          start: combineDateTime(ev.start_date, ev.start_time),
-          end: combineDateTime(ev.end_date, ev.end_time),
-          url: ev.file_url || null
-        })),
-        eventClick(info) {
-          if (info.event.url) {
-            info.jsEvent.preventDefault()
-            window.open(info.event.url, '_blank')
+    function attachEventTableEvents() {
+      document.querySelectorAll('.editEventBtn').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.id
+          const ev = eventsCache.find(x => x.id == id)
+          if (!ev) return alert('ไม่พบข้อมูล Event นี้')
+          eventEditMode = true
+          eventIdInput.value = ev.id
+          eventTitleInput.value = ev.title
+          eventDescriptionInput.value = ev.description || ''
+          eventStartInput.value = ev.start_date || ''
+          eventStartTimeInput.value = ev.start_time ? ev.start_time.slice(0,5) : ''
+          eventEndInput.value = ev.end_date || ''
+          eventEndTimeInput.value = ev.end_time ? ev.end_time.slice(0,5) : ''
+          eventFileUrlInput.value = ev.file_url || ''
+          // Switch to event tab
+          for (let key in sections) {
+            sections[key].classList.toggle('hidden', key !== 'event')
           }
+          tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold'))
+          document.querySelector('[data-target="event"]').classList.add('text-blue-700', 'font-semibold')
         }
       })
-      calendar.render()
-      calendarInitialized = true
+
+      document.querySelectorAll('.deleteEventBtn').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('ลบ Event นี้?')) return
+          const { error } = await supabase.from('events').delete().eq('id', btn.dataset.id)
+          if (error) return alert('ลบ Event ไม่สำเร็จ: ' + error.message)
+          await loadEvents()
+        }
+      })
     }
-  })
-})
 
-// เปิดแท็บปฏิทินเป็นค่าเริ่มต้น
-sections.user.classList.add('hidden')
-sections.calendar.classList.remove('hidden')
-sections.event.classList.add('hidden')
+    eventForm.addEventListener('submit', async e => {
+      e.preventDefault()
 
-tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold'))
-document.querySelector('[data-target="calendar"]').classList.add('text-blue-700', 'font-semibold')
+      const payload = {
+        title: eventTitleInput.value.trim(),
+        description: eventDescriptionInput.value.trim(),
+        start_date: eventStartInput.value,
+        start_time: eventStartTimeInput.value,
+        end_date: eventEndInput.value,
+        end_time: eventEndTimeInput.value,
+        file_url: eventFileUrlInput.value.trim(),
+        created_by: user.id
+      }
 
-// โหลดข้อมูลเริ่มต้น
-loadEvents()
+      if (!payload.start_date || !payload.start_time || !payload.end_date || !payload.end_time) {
+        alert('กรุณากรอกวันที่และเวลาให้ครบถ้วน')
+        return
+      }
+
+      const startDT = new Date(combineDateTime(payload.start_date, payload.start_time))
+      const endDT = new Date(combineDateTime(payload.end_date, payload.end_time))
+      if (endDT < startDT) {
+        alert('วันที่/เวลาสิ้นสุดต้องไม่ก่อนวันที่/เวลาเริ่มต้น')
+        return
+      }
+
+      let error
+      if (eventEditMode) {
+        const res = await supabase.from('events').update(payload).eq('id', eventIdInput.value)
+        error = res.error
+        eventEditMode = false
+      } else {
+        const res = await supabase.from('events').insert([payload])
+        error = res.error
+      }
+
+      if (error) {
+        alert('บันทึก Event ไม่สำเร็จ: ' + error.message)
+        return
+      }
+
+      eventForm.reset()
+      eventSuccess.classList.remove('hidden')
+      setTimeout(() => eventSuccess.classList.add('hidden'), 3000)
+      await loadEvents()
+    })
+
+    eventCancelBtn.onclick = () => {
+      eventEditMode = false
+      eventForm.reset()
+    }
+
+    // Tab control
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const target = btn.dataset.target
+        for (let key in sections) {
+          sections[key].classList.toggle('hidden', key !== target)
+        }
+        tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold'))
+        btn.classList.add('text-blue-700', 'font-semibold')
+
+        if (target === 'calendar' && !calendarInitialized) {
+          const { data: events, error } = await supabase.from('events').select('*')
+          if (error) {
+            alert('โหลด Event ล้มเหลว: ' + error.message)
+            return
+          }
+
+          calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            initialView: 'dayGridMonth',
+            locale: 'th',
+            headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            events: events.map(ev => ({
+              id: ev.id,
+              title: ev.title,
+              start: combineDateTime(ev.start_date, ev.start_time),
+              end: combineDateTime(ev.end_date, ev.end_time),
+              url: ev.file_url || null
+            })),
+            eventClick(info) {
+              if (info.event.url) {
+                info.jsEvent.preventDefault()
+                window.open(info.event.url, '_blank')
+              }
+            }
+          })
+          calendar.render()
+          calendarInitialized = true
+        }
+      })
+    })
+
+    // เปิดแท็บปฏิทินเป็นค่าเริ่มต้น
+    sections.user.classList.add('hidden')
+    sections.calendar.classList.remove('hidden')
+    sections.event.classList.add('hidden')
+
+    tabButtons.forEach(b => b.classList.remove('text-blue-700', 'font-semibold'))
+    document.querySelector('[data-target="calendar"]').classList.add('text-blue-700', 'font-semibold')
+
+    // โหลดข้อมูลเริ่มต้น
+    loadEvents()
 
   </script>
 
