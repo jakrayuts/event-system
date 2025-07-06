@@ -35,6 +35,7 @@
       <div class="bg-white p-6 rounded-xl shadow">
         <h2 class="text-xl font-semibold mb-4">📅 ปฏิทินกิจกรรม</h2>
         <p>คุณสามารถใส่ calendar.js หรือ FullCalendar ตรงนี้ได้</p>
+        <div id="calendar" class="bg-white p-6 rounded-2xl shadow-lg"></div>
       </div>
     </section>
 
@@ -120,6 +121,38 @@
       location.href = 'index.html'
     }
 
+
+
+ document.addEventListener('DOMContentLoaded', async () => {
+        const { data: events } = await supabase.from('events').select('*')
+
+        const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+          initialView: 'dayGridMonth',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+          },
+          locale: 'th',
+          events: events.map(ev => ({
+            title: ev.title,
+            start: ev.start_date,
+            end: ev.end_date,
+            url: ev.file_url,
+            description: ev.description
+          })),
+          eventClick: function (info) {
+            if (!info.event.url) return
+            info.jsEvent.preventDefault()
+            window.open(info.event.url, '_blank')
+          }
+        })
+
+        calendar.render()
+      })
+
+
+    
     const userForm = document.getElementById('userForm')
     const userIdInput = document.getElementById('userId')
     const usernameInput = document.getElementById('username')
