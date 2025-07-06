@@ -233,7 +233,68 @@
       }).join('')
       attachEventTableEvents()
     }
+// ==== ผู้ใช้ ====
+    const userForm = document.getElementById('userForm')
+    const userIdInput = document.getElementById('userId')
+    const usernameInput = document.getElementById('username')
+    const fullNameInput = document.getElementById('fullName')
+    const passwordInput = document.getElementById('password')
+    const roleSelect = document.getElementById('role')
+    const cancelBtn = document.getElementById('cancelBtn')
+    const userTableBody = document.getElementById('userTableBody')
+    const searchInput = document.getElementById('searchInput')
 
+    let allUsers = []
+    let editMode = false
+
+    async function loadUsers() {
+      const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false })
+      if (error) return alert('โหลดผู้ใช้ล้มเหลว')
+      allUsers = data
+      renderUserTable(data)
+    }
+
+    function renderUserTable(users) {
+      if (!users.length) {
+        userTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500">ไม่มีข้อมูล</td></tr>'
+        return
+      }
+      userTableBody.innerHTML = users.map(u => `
+        <tr>
+          <td class="border px-4 py-2">${u.username}</td>
+          <td class="border px-4 py-2">${u.full_name || ''}</td>
+          <td class="border px-4 py-2">${u.role}</td>
+          <td class="border px-4 py-2">${new Date(u.created_at).toLocaleString()}</td>
+          <td class="border px-4 py-2 text-center space-x-2">
+            <button class="editBtn text-blue-600" data-id="${u.id}">แก้ไข</button>
+            <button class="deleteBtn text-red-600" data-id="${u.id}">ลบ</button>
+          </td>
+        </tr>`).join('')
+      attachTableEvents()
+    }
+
+    function attachTableEvents() {
+      document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.dataset.id
+          const u = allUsers.find(x => x.id === id)
+          if (!u) return alert('ไม่พบ')
+          editMode = true
+          userIdInput.value = u.id
+          usernameInput.value = u.username
+          fullNameInput.value = u.full_name
+          passwordInput.value = u.password
+          roleSelect.value = u.role
+        }
+      })
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('ลบผู้ใช้นี้?')) return
+          await supabase.from('users').delete().eq('id', btn.dataset.id)
+          loadUsers()
+        }
+      })
+    }
     function attachEventTableEvents() {
       document.querySelectorAll('.editEventBtn').forEach(btn => {
         btn.onclick = () => {
@@ -268,6 +329,13 @@
       })
     }
 
+
+
+
+
+
+
+    
     eventForm.addEventListener('submit', async e => {
       e.preventDefault()
 
